@@ -5,7 +5,6 @@ public class RandomSoundPlayer : MonoBehaviour
 {
     private AudioSource audioSource;
 
-    [Header("Настройки времени (в секундах)")]
     public float minDelay = 2f;  
     public float maxDelay = 8f; 
 

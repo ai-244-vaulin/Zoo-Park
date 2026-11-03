@@ -7,15 +7,19 @@ public class DeerRunWhenPlayerApprouch : MonoBehaviour
     public float runDuration = 3f;
     public float gravity = -9.8f;
 
-    [Header("Звуки оленя")]
     public AudioSource scaredSource;
     public AudioSource runAwaySource;
 
     private CharacterController characterController;
+    private CreatureMover creatureMover;
+    private AnimalWander animalWander;
     private Animator animator;
     private bool isRunning;
     private float runTimer;
     private float velocityY;
+    private Vector3 runDirection;
+
+    public bool IsRunning => isRunning;
 
     void Awake()
     {
@@ -35,6 +39,9 @@ public class DeerRunWhenPlayerApprouch : MonoBehaviour
     void Start()
     {
         characterController = GetComponent<CharacterController>();
+        creatureMover = GetComponent<CreatureMover>();
+        animalWander = GetComponent<AnimalWander>();
+        runDirection = transform.forward;
 
         if (!isRunning)
         {
@@ -67,6 +74,10 @@ public class DeerRunWhenPlayerApprouch : MonoBehaviour
                 }
             }
 
+            Vector3 away = transform.position - other.transform.position;
+            away.y = 0f;
+            runDirection = away.sqrMagnitude > 0.01f ? away.normalized : transform.forward;
+
             isRunning = true;
             runTimer = runDuration;
         }
@@ -74,17 +85,8 @@ public class DeerRunWhenPlayerApprouch : MonoBehaviour
 
     void Update()
     {
-        if (characterController.isGrounded && velocityY < 0f)
-        {
-            velocityY = -2f;
-        }
-
-        Vector3 move = Vector3.zero;
-
         if (isRunning)
         {
-            move = transform.forward * runSpeed;
-
             runTimer -= Time.deltaTime;
             if (runTimer <= 0f)
             {
@@ -96,6 +98,29 @@ public class DeerRunWhenPlayerApprouch : MonoBehaviour
                 }
             }
         }
+
+        if (creatureMover != null && creatureMover.enabled)
+        {
+            if (isRunning)
+            {
+                Vector3 runTarget = transform.position + Vector3.up * 1f + runDirection * 10f;
+                creatureMover.SetInput(new Vector2(0f, 1f), runTarget, true, false);
+            }
+            else if (animalWander == null || !animalWander.isActiveAndEnabled)
+            {
+                Vector3 lookAhead = transform.position + Vector3.up * 1f + transform.forward * 2f;
+                creatureMover.SetInput(Vector2.zero, lookAhead, false, false);
+            }
+
+            return;
+        }
+
+        if (characterController.isGrounded && velocityY < 0f)
+        {
+            velocityY = -2f;
+        }
+
+        Vector3 move = isRunning ? runDirection * runSpeed : Vector3.zero;
 
         velocityY += gravity * Time.deltaTime;
         move.y = velocityY;

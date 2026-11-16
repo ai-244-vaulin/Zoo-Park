@@ -11,13 +11,16 @@ public class AnimalInfoUI : MonoBehaviour
 
     private Transform player;
     private PlayerMovement playerMovement;
-    private bool isOpen;
+    private ScoreManager scoreManager;
+    public bool isOpen;
 
     void Start()
     {
         playerMovement = FindFirstObjectByType<PlayerMovement>();
         if (playerMovement != null)
             player = playerMovement.transform;
+
+        scoreManager = FindFirstObjectByType<ScoreManager>();
 
         if (infoPanel != null)
             infoPanel.SetActive(false);
@@ -60,7 +63,7 @@ public class AnimalInfoUI : MonoBehaviour
         return closest;
     }
 
-    void ShowInfo(AnimalInfo animal)
+    public void ShowInfo(AnimalInfo animal)
     {
         infoPanel.SetActive(true);
         isOpen = true;
@@ -80,11 +83,23 @@ public class AnimalInfoUI : MonoBehaviour
             animalImage.preserveAspect = true;
         }
 
+        AudioSource animalAudio = animal.GetComponent<AudioSource>();
+        if (animalAudio != null)
+        {
+            animalAudio.Play();
+        }
+
+        if (!animal.isRead)
+        {
+            animal.isRead = true;
+            scoreManager.AddScore(1);
+        }
+
         if (playerMovement != null)
             playerMovement.enabled = false;
     }
 
-    void CloseInfo()
+    public void CloseInfo()
     {
         infoPanel.SetActive(false);
         isOpen = false;
